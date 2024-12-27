@@ -8,7 +8,7 @@ const db = require('../models/index.js');
 
 async function fetchAndUpdateJob() {
   
-  const { default: fetch } = await import('node-fetch');  
+  const { default: fetch } = await import('node-fetch');  //improves performance and loaded module when needed.
 
   const { Details } = db;
 
