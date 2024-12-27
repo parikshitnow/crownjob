@@ -24,16 +24,13 @@ async function fetchAndUpdateJob() {
       const url = 'https://api.kite.trade/instruments';
       const tempFilePath = path.resolve('temp', 'instruments.csv');
 
-      // Ensure temp directory exists
       await fs.ensureDir(path.dirname(tempFilePath));
 
-      // Fetch and save the CSV file
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch the CSV file');
       const fileStream = fs.createWriteStream(tempFilePath);
       response.body.pipe(fileStream);
 
-      // Wait for the file to finish writing
       await new Promise((resolve, reject) => {
         fileStream.on('finish', resolve);
         fileStream.on('error', reject);
@@ -41,7 +38,6 @@ async function fetchAndUpdateJob() {
 
       console.log('CSV file downloaded successfully.');
 
-      // Parse the CSV and update the database
       const rows = [];
       fs.createReadStream(tempFilePath)
         .pipe(csv())
