@@ -11,11 +11,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     tradingsymbol: {
-      type: DataTypes.STRING(100), // Limit to 60 characters
+      type: DataTypes.STRING(150), // Limit to 60 characters
       allowNull: false,
     },
     name: {
-      type: DataTypes.STRING(100), // Limit to 30 characters
+      type: DataTypes.STRING(150), // Limit to 30 characters
       allowNull: true,
     },
     last_price: {

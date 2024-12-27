@@ -1,9 +1,9 @@
-// fetchAndUpdateJob.js
 const cron = require('node-cron');
 const fs = require('fs-extra');
 const fastcsv = require('fast-csv');
 const path = require('path');
 const db = require('../models/index.js');
+const { sequelize } = db;  // Get Sequelize instance
 
 async function KiteInstrumentFetchAndUpdateJob() {
   const { KiteInstrument } = db;
@@ -13,10 +13,9 @@ async function KiteInstrumentFetchAndUpdateJob() {
     process.exit(1);
   }
 
-  const { default: fetch } = await import('node-fetch');  //improves performance and loaded module when needed.
+  const { default: fetch } = await import('node-fetch');
 
-  const cron = require('node-cron');
-  cron.schedule('30 08 * * 1-5', async () => {
+  cron.schedule('21 19 * * 1-5', async () => {
     console.log('Running the fetch and update job at 8:30 AM (Mon-Fri)...');
 
     try {
@@ -27,9 +26,11 @@ async function KiteInstrumentFetchAndUpdateJob() {
 
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch the CSV file');
+
       const fileStream = fs.createWriteStream(tempFilePath);
       response.body.pipe(fileStream);
 
+      // Wait for fileStream to finish
       await new Promise((resolve, reject) => {
         fileStream.on('finish', resolve);
         fileStream.on('error', reject);
@@ -37,48 +38,43 @@ async function KiteInstrumentFetchAndUpdateJob() {
 
       console.log('CSV file downloaded successfully.');
 
+      // Parse CSV file and process rows
       const rows = [];
-      fs.createReadStream(tempFilePath)
-        .pipe(fastcsv.parse({ headers: true, skipEmptyLines: true }))
-        .on('data', (row) => rows.push(row))
-        .on('end', async () => {
-          console.log('CSV file parsed successfully.');
+      await new Promise((resolve, reject) => {
+        fs.createReadStream(tempFilePath)
+          .pipe(fastcsv.parse({ headers: true, skipEmptyLines: true }))
+          .on('data', (row) => {
+            rows.push({
+              instrument_token: parseInt(row.instrument_token, 10),
+              exchange_token: parseInt(row.exchange_token, 10),
+              tradingsymbol: row.tradingsymbol,
+              name: row.name,
+              last_price: parseFloat(row.last_price),
+              expiry: row.expiry.toString(),
+              strike: parseFloat(row.strike),
+              tick_size: parseFloat(row.tick_size),
+              lot_size: parseInt(row.lot_size, 10),
+              instrument_type: row.instrument_type,
+              segment: row.segment,
+              exchange: row.exchange,
+            });
+          })
+          .on('end', resolve)
+          .on('error', reject);
+      });
 
-          // Map rows to the required data structure for bulkInsert
-          const dataToInsert = rows.map((row) => ({
-            instrument_token: row.instrument_token,
-            exchange_token: row.exchange_token,
-            tradingsymbol: row.tradingsymbol,
-            name: row.name,
-            last_price: row.last_price,
-            expiry: row.expiry,
-            strike: row.strike,
-            tick_size: row.tick_size,
-            lot_size: row.lot_size,
-            instrument_type: row.instrument_type,
-            segment: row.segment,
-            exchange: row.exchange,
-          }));
+      console.log('CSV file parsed successfully.');
 
-          // Perform bulkCreate with updateOnDuplicate for upsert-like behavior
-          await KiteInstrument.bulkCreate(dataToInsert, {
-            updateOnDuplicate: [
-              'exchange_token', 
-              'name', 
-              'last_price', 
-              'expiry', 
-              'strike', 
-              'tick_size', 
-              'lot_size', 
-              'instrument_type', 
-              'segment', 
-              'exchange'
-            ],
-          });
-          
+      // Send the batch of rows to the stored procedure
+      await sequelize.query('CALL upsert_kite_instruments(:json_data)', {
+        replacements: {
+          json_data: JSON.stringify(rows),  // Send the entire array of rows as JSON
+        },
+        type: sequelize.QueryTypes.RAW,  // Raw query, as we're calling a stored procedure
+      });
 
-          console.log('Database updated successfully.');
-        });
+      console.log('Database update job completed successfully.');
+
     } catch (error) {
       console.error('Error in fetch and update job:', error);
     }
