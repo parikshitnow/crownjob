@@ -17,8 +17,8 @@ async function fetchAndUpdateJob() {
     process.exit(1);  // Exit if model is missing
   }
 
-  cron.schedule('05 19 * * 1-5', async () => {
-    console.log('Running the fetch and update job at 7:15 PM (Mon-Fri)...');
+  cron.schedule('30 8 * * 1-5', async () => {
+    console.log('Running the fetch and update job at 8:30 PM (Mon-Fri)...');
 
     try {
       const url = 'https://api.kite.trade/instruments';
