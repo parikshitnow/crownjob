@@ -8,17 +8,17 @@ const db = require('../models/index.js');
 
 async function fetchAndUpdateJob() {
   
-  const { default: fetch } = await import('node-fetch');  // ESM dynamic import
+  const { default: fetch } = await import('node-fetch');  
 
   const { Details } = db;
 
   if (!Details) {
     console.error('Details model is not loaded properly!');
-    process.exit(1);  // Exit if model is missing
+    process.exit(1); 
   }
 
   cron.schedule('30 8 * * 1-5', async () => {
-    console.log('Running the fetch and update job at 8:30 PM (Mon-Fri)...');
+    console.log('Running the fetch and update job at 8:30 AM (Mon-Fri)...');
 
     try {
       const url = 'https://api.kite.trade/instruments';
@@ -49,7 +49,6 @@ async function fetchAndUpdateJob() {
         .on('end', async () => {
           console.log('CSV file parsed successfully.');
 
-          // Upsert data into the database
           for (const row of rows) {
             await Details.upsert({
               instrument_token: row.instrument_token,
@@ -75,5 +74,4 @@ async function fetchAndUpdateJob() {
   });
 }
 
-// Export the function properly after dynamic import
 module.exports = fetchAndUpdateJob;
