@@ -1,0 +1,58 @@
+
+BEGIN
+    -- Perform the upsert operation in a single batch
+    INSERT INTO kite_instruments (
+        instrument_token, 
+        exchange_token, 
+        tradingsymbol, 
+        name, 
+        last_price, 
+        expiry, 
+        strike, 
+        tick_size, 
+        lot_size, 
+        instrument_type, 
+        segment, 
+        exchange
+    )
+    SELECT 
+        instrument_token, 
+        exchange_token, 
+        tradingsymbol, 
+        name, 
+        last_price, 
+        expiry, 
+        strike, 
+        tick_size, 
+        lot_size, 
+        instrument_type, 
+        segment, 
+        exchange
+    FROM jsonb_to_recordset(json_data) AS (
+        instrument_token INT,
+        exchange_token INT,
+        tradingsymbol TEXT,
+        name TEXT,
+        last_price DECIMAL(12, 2),
+        expiry TEXT,
+        strike DECIMAL(12, 2),
+        tick_size DECIMAL(12, 2),
+        lot_size INT,
+        instrument_type TEXT,
+        segment TEXT,
+        exchange TEXT
+    )
+    ON CONFLICT (instrument_token)  -- Use instrument_token as the primary key
+    DO UPDATE SET 
+        exchange_token = EXCLUDED.exchange_token,
+        tradingsymbol = EXCLUDED.tradingsymbol,
+        name = EXCLUDED.name,
+        last_price = EXCLUDED.last_price,
+        expiry = EXCLUDED.expiry,
+        strike = EXCLUDED.strike,
+        tick_size = EXCLUDED.tick_size,
+        lot_size = EXCLUDED.lot_size,
+        instrument_type = EXCLUDED.instrument_type,
+        segment = EXCLUDED.segment,
+        exchange = EXCLUDED.exchange;
+END;
