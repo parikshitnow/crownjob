@@ -15,7 +15,7 @@ async function KiteInstrumentFetchAndUpdateJob() {
 
   const { default: fetch } = await import('node-fetch');
 
-  cron.schedule('21 19 * * 1-5', async () => {
+  cron.schedule('30 08 * * 1-5', async () => {
     console.log('Running the fetch and update job at 8:30 AM (Mon-Fri)...');
 
     try {
