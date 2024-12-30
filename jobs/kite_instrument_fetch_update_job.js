@@ -15,7 +15,7 @@ async function KiteInstrumentFetchAndUpdateJob() {
 
   const { default: fetch } = await import('node-fetch');
 
-  cron.schedule('30 08 * * 1-5', async () => {
+  cron.schedule('01 19 * * 1-5', async () => {
     console.log('Running the fetch and update job at 8:30 AM (Mon-Fri)...');
 
     try {
@@ -59,11 +59,14 @@ async function KiteInstrumentFetchAndUpdateJob() {
               exchange: row.exchange,
             });
           })
-          .on('end', resolve)
+          .on('end', () => {
+            console.log('CSV file parsed successfully. Number of rows:', rows.length);  // Log count, not rows data
+            resolve();  // Resolve promise after parsing
+          })
           .on('error', reject);
       });
 
-      console.log('CSV file parsed successfully.');
+      // console.log('CSV file parsed successfully.');
 
       // Send the batch of rows to the stored procedure
       await sequelize.query('CALL upsert_kite_instruments(:json_data)', {
@@ -71,6 +74,7 @@ async function KiteInstrumentFetchAndUpdateJob() {
           json_data: JSON.stringify(rows),  // Send the entire array of rows as JSON
         },
         type: sequelize.QueryTypes.RAW,  // Raw query, as we're calling a stored procedure
+        logging: false, 
       });
 
       console.log('Database update job completed successfully.');

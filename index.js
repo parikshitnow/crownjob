@@ -13,10 +13,10 @@ KiteInstrumentFetchAndUpdateJob();
 
 //declare table sync here 
 
-KiteInstrument.sync({ force: false })  // Use force: true if you want to drop and recreate the table
-  .then(() => {
-    console.log('Details table created or verified');
-  })
-  .catch((error) => {
-    console.error('Error syncing the model:', error);
-  });
+// KiteInstrument.sync({ force: false })  // Use force: true if you want to drop and recreate the table
+//   .then(() => {
+//     console.log('Details table created or verified');
+//   })
+//   .catch((error) => {
+//     console.error('Error syncing the model:', error);
+//   });
