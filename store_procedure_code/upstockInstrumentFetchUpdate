@@ -1,0 +1,183 @@
+CREATE OR REPLACE PROCEDURE upsert_upstox_instruments(json_data jsonb)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Ensure upstox_instruments table exists and truncate if necessary
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'upstox_instruments') THEN
+        EXECUTE 'TRUNCATE TABLE upstox_instruments';
+    ELSE
+        -- Create upstox_instruments table if it does not exist
+        EXECUTE format('CREATE TABLE upstox_instruments (
+            id SERIAL PRIMARY KEY, 
+            instrument_key TEXT,
+            exchange_token NUMERIC(12, 2),
+            tradingsymbol TEXT,
+            name TEXT,
+            last_price NUMERIC(16, 6),
+            expiry TEXT,
+            strike NUMERIC(16, 6),
+            tick_size NUMERIC(16, 6),
+            lot_size NUMERIC(12, 2),
+            instrument_type TEXT,
+            option_type TEXT,
+            exchange TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )');
+    END IF;
+
+    -- Insert data into upstox_instruments from the provided JSON
+    INSERT INTO upstox_instruments (
+        instrument_key,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        option_type,
+        exchange,
+        created_at
+    )
+    SELECT
+        instrument_key,
+        exchange_token::NUMERIC(12, 2),
+        tradingsymbol,
+        name,
+        last_price::NUMERIC(16, 6),
+        expiry,
+        strike::NUMERIC(16, 6),
+        tick_size::NUMERIC(16, 6),
+        lot_size::NUMERIC(12, 2),
+        instrument_type,
+        option_type,
+        exchange,
+        CURRENT_TIMESTAMP
+    FROM jsonb_to_recordset(json_data) AS (
+        instrument_key TEXT,
+        exchange_token TEXT,  -- Treat exchange_token as TEXT for validation
+        tradingsymbol TEXT,
+        name TEXT,
+        last_price TEXT,  -- Treat last_price, strike, tick_size as TEXT for validation
+        expiry TEXT,
+        strike TEXT,  -- Treat strike as TEXT for validation
+        tick_size TEXT,  -- Treat tick_size as TEXT for validation
+        lot_size NUMERIC(12, 2),
+        instrument_type TEXT,
+        option_type TEXT,
+        exchange TEXT
+    );
+
+    -- Truncate and insert data into upstox_nse_nfo_list based on segment condition
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'upstox_nse_nfo_list') THEN
+        EXECUTE 'TRUNCATE TABLE upstox_nse_nfo_list';
+    ELSE
+        -- Create upstox_nse_nfo_list table if it does not exist
+        EXECUTE format('CREATE TABLE upstox_nse_nfo_list (
+            id SERIAL PRIMARY KEY, 
+            instrument_key TEXT,
+            exchange_token NUMERIC(12, 2),
+            tradingsymbol TEXT,
+            name TEXT,
+            last_price NUMERIC(16, 6),
+            expiry TEXT,
+            strike TEXT,
+            tick_size NUMERIC(16, 6),
+            lot_size NUMERIC(12, 2),
+            instrument_type TEXT,
+            option_type TEXT,
+            exchange TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )');
+    END IF;
+
+    INSERT INTO upstox_nse_nfo_list (
+        instrument_key,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        option_type,
+        exchange,
+        created_at
+    )
+    SELECT
+        instrument_key,
+        exchange_token::NUMERIC(12, 2),
+        tradingsymbol,
+        name,
+        last_price::NUMERIC(16, 6),
+        expiry,
+        strike::TEXT,
+        tick_size::NUMERIC(16, 6),
+        lot_size::NUMERIC(12, 2),
+        instrument_type,
+        option_type,
+        exchange,
+        CURRENT_TIMESTAMP
+    FROM upstox_instruments
+    WHERE exchange IN ('NSE_FO');
+
+    -- Truncate and insert data into upstox_nse_eq_list based on exchange condition
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'upstox_nse_eq_list') THEN
+        EXECUTE 'TRUNCATE TABLE upstox_nse_eq_list';
+    ELSE
+        -- Create upstox_nse_eq_list table if it does not exist
+        EXECUTE format('CREATE TABLE upstox_nse_eq_list (
+            id SERIAL PRIMARY KEY, 
+            instrument_key TEXT,
+            exchange_token NUMERIC(12, 2),
+            tradingsymbol TEXT,
+            name TEXT,
+            last_price NUMERIC(16, 6),
+            expiry TEXT,
+            strike TEXT,
+            tick_size NUMERIC(16, 6),
+            lot_size NUMERIC(12, 2),
+            instrument_type TEXT,
+            option_type TEXT,
+            exchange TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )');
+    END IF;
+
+    INSERT INTO upstox_nse_eq_list (
+        instrument_key,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        option_type,
+        exchange,
+        created_at
+    )
+    SELECT
+        instrument_key,
+        exchange_token::NUMERIC(12, 2),
+        tradingsymbol,
+        name,
+        last_price::NUMERIC(16, 6),
+        expiry,
+        strike::TEXT,
+        tick_size::NUMERIC(16, 6),
+        lot_size::NUMERIC(12, 2),
+        instrument_type,
+        option_type,
+        exchange,
+        CURRENT_TIMESTAMP
+    FROM upstox_instruments
+    WHERE exchange = 'NSE_EQ';
+END;
+$$;

@@ -1,7 +1,8 @@
 // index.js
 const app = require('./app'); 
-const { KiteInstrument } = require('./models'); 
-const KiteInstrumentFetchAndUpdateJob = require('./jobs/kite_instrument_fetch_update_job');  
+const { kiteInstrument,upstoxInstrument } = require('./models'); 
+const kiteInstrumentFetchAndUpdateJob = require('./jobs/kiteInstrumentFetchUpdate.job');  
+const upstoxInstrumentFetchAndUpdateJob = require('./jobs/upstockInstrumentFetchUpdate.job')
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
@@ -9,7 +10,8 @@ app.listen(PORT, () => {
 });
 
 //declare jobs here 
-KiteInstrumentFetchAndUpdateJob();
+kiteInstrumentFetchAndUpdateJob();
+upstoxInstrumentFetchAndUpdateJob();
 
 //declare table sync here 
 
@@ -20,3 +22,19 @@ KiteInstrumentFetchAndUpdateJob();
 //   .catch((error) => {
 //     console.error('Error syncing the model:', error);
 //   });
+
+  kiteInstrument.sync({ force: false })  // Use force: true if you want to drop and recreate the table
+  .then(() => {
+    console.log('kiteInstrument table created or verified');
+  })
+  .catch((error) => {
+    console.error('Error syncing the model:', error);
+  });
+
+  upstoxInstrument.sync({ force: true })  // Use force: true if you want to drop and recreate the table
+  .then(() => {
+    console.log('upstoxInstrument table created or verified');
+  })
+  .catch((error) => {
+    console.error('Error syncing the model:', error);
+  });

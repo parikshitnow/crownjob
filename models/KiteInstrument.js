@@ -1,19 +1,19 @@
 module.exports = (sequelize, DataTypes) => {
-  const KiteInstrument = sequelize.define(
-    'KiteInstrument',
+  const kiteInstrument = sequelize.define(
+    'kiteInstrument',
     {
       instrument_token: {
         type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
+        allowNull: true,
+        primaryKey: false,
       },
       exchange_token: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       tradingsymbol: {
         type: DataTypes.STRING(150), // Limit to 150 characters
-        allowNull: false,
+        allowNull: true,
       },
       name: {
         type: DataTypes.STRING(150), // Limit to 150 characters
@@ -60,5 +60,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  return KiteInstrument;
+  return kiteInstrument;
 };
