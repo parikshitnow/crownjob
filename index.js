@@ -31,7 +31,7 @@ upstoxInstrumentFetchAndUpdateJob();
     console.error('Error syncing the model:', error);
   });
 
-  upstoxInstrument.sync({ force: true })  // Use force: true if you want to drop and recreate the table
+  upstoxInstrument.sync({ force: false })  // Use force: true if you want to drop and recreate the table
   .then(() => {
     console.log('upstoxInstrument table created or verified');
   })

@@ -17,8 +17,8 @@ async function upstoxInstrumentFetchAndUpdateJob() {
 
   const { default: fetch } = await import('node-fetch');
   
-  cron.schedule('06 19 * * 1-5', async () => {
-    console.log('Running the fetch and update job at 4:18 PM (Mon-Fri)...');
+  cron.schedule('30 08 * * 1-5', async () => {
+    console.log('Running the fetch and update job at 08:30 AM (Mon-Fri)...');
 
     try {
       const url = 'https://assets.upstox.com/market-quote/instruments/exchange/complete.csv.gz';

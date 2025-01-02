@@ -1,58 +1,149 @@
-
 BEGIN
-    -- Perform the upsert operation in a single batch
+    -- Ensure kite_instruments table exists and truncate if necessary
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'kite_instruments') THEN
+        EXECUTE 'TRUNCATE TABLE kite_instruments';
+    ELSE
+        -- Create kite_instruments table if it does not exist
+        EXECUTE format('CREATE TABLE kite_instruments (
+            instrument_token INT,
+            exchange_token INT,
+            tradingsymbol TEXT,
+            name TEXT,
+            last_price DECIMAL(12, 2),
+            expiry TEXT,
+            strike DECIMAL(12, 2),
+            tick_size DECIMAL(12, 2),
+            lot_size INT,
+            instrument_type TEXT,
+            segment TEXT,
+            exchange TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )');
+    END IF;
+
+    -- Insert data into kite_instruments from the provided JSON
     INSERT INTO kite_instruments (
-        instrument_token, 
-        exchange_token, 
-        tradingsymbol, 
-        name, 
-        last_price, 
-        expiry, 
-        strike, 
-        tick_size, 
-        lot_size, 
-        instrument_type, 
-        segment, 
-        exchange
+        instrument_token,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        segment,
+        exchange,
+        created_at
     )
-    SELECT 
-        instrument_token, 
-        exchange_token, 
-        tradingsymbol, 
-        name, 
-        last_price, 
-        expiry, 
-        strike, 
-        tick_size, 
-        lot_size, 
-        instrument_type, 
-        segment, 
-        exchange
+    SELECT
+        CASE WHEN instrument_token = '' THEN NULL ELSE instrument_token::INT END,
+        CASE WHEN exchange_token = '' THEN NULL ELSE exchange_token::INT END,
+        tradingsymbol,
+        name,
+        CASE WHEN last_price = '' THEN NULL ELSE last_price::DECIMAL(12, 2) END,
+        expiry,
+        CASE WHEN strike = '' THEN NULL ELSE strike::DECIMAL(12, 2) END,
+        CASE WHEN tick_size = '' THEN NULL ELSE tick_size::DECIMAL(12, 2) END,
+        CASE WHEN lot_size = '' THEN NULL ELSE lot_size::INT END,
+        instrument_type,
+        segment,
+        exchange,
+        CURRENT_TIMESTAMP
     FROM jsonb_to_recordset(json_data) AS (
-        instrument_token INT,
-        exchange_token INT,
+        instrument_token TEXT,
+        exchange_token TEXT,
         tradingsymbol TEXT,
         name TEXT,
-        last_price DECIMAL(12, 2),
+        last_price TEXT,
         expiry TEXT,
-        strike DECIMAL(12, 2),
-        tick_size DECIMAL(12, 2),
-        lot_size INT,
+        strike TEXT,
+        tick_size TEXT,
+        lot_size TEXT,
         instrument_type TEXT,
         segment TEXT,
         exchange TEXT
+    );
+
+    -- Truncate and insert data into nse_nfo_list based on segment condition
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nse_nfo_list') THEN
+        EXECUTE 'TRUNCATE TABLE nse_nfo_list';
+    ELSE
+        -- Create nse_nfo_list table if it does not exist
+        EXECUTE format('CREATE TABLE nse_nfo_list AS TABLE kite_instruments WITH NO DATA');
+    END IF;
+
+    INSERT INTO nse_nfo_list (
+        instrument_token,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        segment,
+        exchange,
+        created_at
     )
-    ON CONFLICT (instrument_token)  -- Use instrument_token as the primary key
-    DO UPDATE SET 
-        exchange_token = EXCLUDED.exchange_token,
-        tradingsymbol = EXCLUDED.tradingsymbol,
-        name = EXCLUDED.name,
-        last_price = EXCLUDED.last_price,
-        expiry = EXCLUDED.expiry,
-        strike = EXCLUDED.strike,
-        tick_size = EXCLUDED.tick_size,
-        lot_size = EXCLUDED.lot_size,
-        instrument_type = EXCLUDED.instrument_type,
-        segment = EXCLUDED.segment,
-        exchange = EXCLUDED.exchange;
+    SELECT
+        instrument_token,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        segment,
+        exchange,
+        created_at
+    FROM kite_instruments
+    WHERE segment IN ('NFO-OPT', 'NFO-FUT');
+
+    -- Truncate and insert data into nse_eq_list based on exchange condition
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nse_eq_list') THEN
+        EXECUTE 'TRUNCATE TABLE nse_eq_list';
+    ELSE
+        -- Create nse_eq_list table if it does not exist
+        EXECUTE format('CREATE TABLE nse_eq_list AS TABLE kite_instruments WITH NO DATA');
+    END IF;
+
+    INSERT INTO nse_eq_list (
+        instrument_token,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        segment,
+        exchange,
+        created_at
+    )
+    SELECT
+        instrument_token,
+        exchange_token,
+        tradingsymbol,
+        name,
+        last_price,
+        expiry,
+        strike,
+        tick_size,
+        lot_size,
+        instrument_type,
+        segment,
+        exchange,
+        created_at
+    FROM kite_instruments
+    WHERE exchange = 'NSE';
 END;
+
