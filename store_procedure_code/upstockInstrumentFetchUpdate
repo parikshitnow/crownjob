@@ -21,7 +21,7 @@ BEGIN
             instrument_type TEXT,
             option_type TEXT,
             exchange TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at DATE DEFAULT CURRENT_DATE
         )');
     END IF;
 
@@ -43,14 +43,14 @@ BEGIN
     )
     SELECT
         instrument_key,
-        CASE WHEN exchange_token = '' THEN NULL ELSE exchange_token::NUMERIC(12, 2) END,
+        CASE WHEN exchange_token = '' THEN 0 ELSE exchange_token::NUMERIC(12, 2) END,
         tradingsymbol,
         name,
-        CASE WHEN last_price = '' THEN NULL ELSE last_price::NUMERIC(16, 6) END,
+        CASE WHEN last_price = '' THEN 0 ELSE last_price::NUMERIC(16, 6) END,
         expiry,
-        CASE WHEN strike = '' THEN NULL ELSE strike::NUMERIC(16, 6) END,
-        CASE WHEN tick_size = '' THEN NULL ELSE tick_size::NUMERIC(16, 6) END,
-        CASE WHEN lot_size = '' THEN NULL ELSE lot_size::NUMERIC(12, 2) END,
+        CASE WHEN strike = '' THEN 0 ELSE strike::NUMERIC(16, 6) END,
+        CASE WHEN tick_size = '' THEN 0 ELSE tick_size::NUMERIC(16, 6) END,
+        CASE WHEN lot_size = '' THEN 0 ELSE lot_size::NUMERIC(12, 2) END,
         instrument_type,
         option_type,
         exchange,
@@ -88,7 +88,7 @@ BEGIN
             instrument_type TEXT,
             option_type TEXT,
             exchange TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at DATE DEFAULT CURRENT_DATE
         )');
     END IF;
 
@@ -142,7 +142,7 @@ BEGIN
             instrument_type TEXT,
             option_type TEXT,
             exchange TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at DATE DEFAULT CURRENT_DATE
         )');
     END IF;
 
@@ -176,6 +176,7 @@ BEGIN
         exchange,
         CURRENT_TIMESTAMP
     FROM upstox_instruments
-    WHERE exchange IN ('NSE_EQ');
+    WHERE exchange IN ('NSE_EQ','NSE_INDEX');
 END;
 $$;
+

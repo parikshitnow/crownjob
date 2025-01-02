@@ -17,7 +17,7 @@ async function upstoxInstrumentFetchAndUpdateJob() {
 
   const { default: fetch } = await import('node-fetch');
   
-  cron.schedule('30 08 * * 1-5', async () => {
+  cron.schedule('24 15 * * 1-5', async () => {
     console.log('Running the fetch and update job at 08:30 AM (Mon-Fri)...');
 
     try {

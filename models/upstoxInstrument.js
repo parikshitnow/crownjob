@@ -1,3 +1,5 @@
+
+
 module.exports = (sequelize, DataTypes) => {
   const upstoxInstrument = sequelize.define(
     'upstoxInstrument',
@@ -5,22 +7,22 @@ module.exports = (sequelize, DataTypes) => {
       instrument_key: {
         type: DataTypes.STRING(150),
         allowNull: true,
-        primaryKey: false,
+        primaryKey: false,  // We aren't setting this as primary key
       },
       exchange_token: {
-        type: DataTypes.DECIMAL(12, 2), // Handles both integers and floats with precision
+        type: DataTypes.DECIMAL(12, 2),
         allowNull: true,
       },
       tradingsymbol: {
-        type: DataTypes.STRING(150), // Limit to 150 characters
+        type: DataTypes.STRING(150),
         allowNull: true,
       },
       name: {
-        type: DataTypes.STRING(150), // Limit to 150 characters
+        type: DataTypes.STRING(150),
         allowNull: true,
       },
       last_price: {
-        type: DataTypes.DECIMAL(16, 6), // Handles both integers and floats with precision
+        type: DataTypes.DECIMAL(16, 6),
         allowNull: true,
       },
       expiry: {
@@ -28,37 +30,44 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       strike: {
-        type: DataTypes.DECIMAL(16, 6), // Handles both integers and floats with precision
+        type: DataTypes.DECIMAL(16, 6),
         allowNull: true,
       },
       tick_size: {
-        type: DataTypes.DECIMAL(16, 6), // Handles both integers and floats with precision
+        type: DataTypes.DECIMAL(16, 6),
         allowNull: true,
       },
       lot_size: {
-        type: DataTypes.DECIMAL(12, 2), // Handles both integers and floats with precision
+        type: DataTypes.DECIMAL(12, 2),
         allowNull: true,
       },
       instrument_type: {
-        type: DataTypes.STRING(10), // Limit to 10 characters
+        type: DataTypes.STRING(10),
         allowNull: true,
       },
       option_type: {
-        type: DataTypes.STRING(15), // Limit to 15 characters
+        type: DataTypes.STRING(15),
         allowNull: true,
       },
       exchange: {
-        type: DataTypes.STRING(10), // Limit to 10 characters
+        type: DataTypes.STRING(10),
         allowNull: true,
+      },
+      created_at: {
+        type: DataTypes.DATEONLY, // Store only the date (no time)
+        allowNull: false,
+        defaultValue: DataTypes.NOW, // Default to the current date
       },
     },
     {
-      tableName: 'upstox_instruments', // Set custom table name
-      timestamps: true, // Enables createdAt and updatedAt columns
-      createdAt: 'created_at', // Rename createdAt column to created_at
-      updatedAt: false, // Disable updatedAt column if not needed
+      tableName: 'upstox_instruments',
+      timestamps: true, 
+      createdAt: 'created_at',
+      updatedAt: false, 
     }
   );
+
+
 
   return upstoxInstrument;
 };
