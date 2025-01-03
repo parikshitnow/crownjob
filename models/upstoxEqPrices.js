@@ -41,14 +41,6 @@ module.exports=(sequelize,DataTypes)=>{
             type:DataTypes.DECIMAL(12,2),
             allowNull:true,
           },
-          high52:{
-            type:DataTypes.DECIMAL(12,2),
-            allowNull:true,
-          },
-          low52:{
-            type:DataTypes.DECIMAL(12,2),
-            allowNull:true,
-          },
           time: {
             type: DataTypes.TIME, // Store the time in IST
             allowNull: false,

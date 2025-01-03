@@ -246,6 +246,17 @@ async function upstoxEveryMinuteEqUpdates() {
       }
       console.log('First key-value pair:', Object.entries(finalResponses)[0]);
       console.log('Number of responses:', Object.keys(finalResponses).length);
+
+      await sequelize.query('CALL insert_data_upstox_nse_eq_prices(:jsonData)', {
+        replacements: {
+          jsonData: JSON.stringify(finalResponses), // Make sure this key matches the placeholder in the query
+        },
+        type: sequelize.QueryTypes.RAW,
+        logging: false,
+      });
+      
+
+      console.log('Database upstox insert_data_upstox_nse_eq_prices per minute job completed successfully.');
     } catch (error) {
       console.error('Error in upstoxEqUpdates job:', error);
     }
